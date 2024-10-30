@@ -1,6 +1,8 @@
 name: 'k3s + jenkins'
 
 on:
+  pull_request:
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
@@ -35,6 +37,7 @@ jobs:
         run: terraform apply -auto-approve -input=false
         env:
           TF_VAR_is_local_setup: false
-          TF_VAR_domain: ${{ vars.DOMAIN }}
-          TF_VAR_k3s_token: ${{ secrets.TF_VAR_k3s_token }}
-          TF_VAR_private_key: ${{ secrets.PRIVATE_KEY }}
+          TF_VAR_domain: ${{ vars.TF_VAR_DOMAIN }}
+          TF_VAR_k3s_token: ${{ secrets.TF_VAR_K3S_TOKEN }}
+          TF_VAR_private_key: ${{ secrets.TF_VAR_PRIVATE_KEY }}
+          TF_VAR_private_key_path: ${{ vars.TF_VAR_PRIVATE_KEY_PATH }}
