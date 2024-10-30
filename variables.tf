@@ -13,7 +13,7 @@ variable "aws_region" {
 variable "k3s_token" {
   description = "k3s token"
   type        = string
-  sensitive   = true
+  # sensitive   = true
 }
 
 variable "jenkins" {

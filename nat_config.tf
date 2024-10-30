@@ -22,21 +22,24 @@ data "aws_instance" "k3s_server" {
     name   = "tag:Name"
     values = ["k3s_server"]
   }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }
 
 resource "null_resource" "nat_instance" {
-  depends_on = [data.aws_instance.nat_instance, data.aws_eip.nat_instance]
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    host        = data.aws_eip.nat_instance.public_ip
+    private_key = file("~/.ssh/aws_jump_host.pem")
+  }
 
+  # setup NAT
   provisioner "remote-exec" {
-    connection {
-      host        = data.aws_eip.nat_instance.public_ip
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = file("~/.ssh/aws_jump_host.pem")
-    }
-
     inline = [
-      # setup NAT
       "sudo dnf install iptables-services -y",
       "sudo systemctl enable --now iptables",
       "echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.d/custom-ip-forwarding.conf",
@@ -45,7 +48,12 @@ resource "null_resource" "nat_instance" {
       "sudo /sbin/iptables -F FORWARD",
       "sudo /sbin/iptables -F INPUT",
       "sudo service iptables save",
+    ]
+  }
 
+  # setup NGINX to proxy JENKINS from private subnet
+  provisioner "remote-exec" {
+    inline = [
       # install nginx
       "sudo dnf install nginx -y",
       "sudo systemctl enable --now nginx",
