@@ -34,7 +34,7 @@ resource "null_resource" "nat_instance" {
     type        = "ssh"
     user        = "ec2-user"
     host        = data.aws_eip.nat_instance.public_ip
-    private_key = file("~/.ssh/aws_jump_host.pem")
+    private_key = var.private_key
   }
 
   # setup NAT
@@ -60,6 +60,8 @@ resource "null_resource" "nat_instance" {
 
       # install certbot for tls certificates
       "sudo dnf install certbot python3-certbot-nginx -y",
+      # enable automatic certificates renewals
+      "sudo systemctl start certbot-renew.timer",
 
       # nginx config to proxy jenkins
       "cat <<EOF > jenkins-reverse-proxy.conf",
@@ -77,10 +79,11 @@ resource "null_resource" "nat_instance" {
       "  }",
       "EOF",
       "sudo cp jenkins-reverse-proxy.conf /etc/nginx/default.d/jenkins-reverse-proxy.conf",
-      "sudo sed -i 's/server_name  _;/server_name  ${var.domain} www.${var.domain};/' /etc/nginx/nginx.conf",
+      "sudo sed -i 's/server_name  _;/server_name  ${var.domain} jenkins.${var.domain};/' /etc/nginx/nginx.conf",
 
       # generate tls certificates with certbot
-      "sudo certbot --nginx --agree-tos --register-unsafely-without-email -d ${var.domain} -d www.${var.domain}",
+      # duplicate certificate limit of 5 per week - https://letsencrypt.org/docs/duplicate-certificate-limit/
+      "sudo certbot --nginx --agree-tos --register-unsafely-without-email -d ${var.domain} -d jenkins.${var.domain}",
       "sudo nginx -t",
       "sudo systemctl reload nginx",
     ]

@@ -6,7 +6,7 @@ data "aws_ebs_volume" "jenkins_volume" {
 }
 
 resource "null_resource" "k3s_server" {
-  depends_on = [ null_resource.nat_instance ]
+  depends_on = [null_resource.nat_instance]
 
   provisioner "remote-exec" {
     connection {
@@ -14,14 +14,17 @@ resource "null_resource" "k3s_server" {
       user         = "ec2-user"
       host         = data.aws_instance.k3s_server.private_ip
       bastion_host = data.aws_eip.nat_instance.public_ip
-      private_key  = file("~/.ssh/aws_jump_host.pem")
+      private_key  = var.private_key
     }
 
     # setup JENKINS in k3s cluster
     inline = [
       # install k3s
       "curl -sfL https://get.k3s.io | K3S_TOKEN=${var.k3s_token} sudo sh -s -",
-      
+      # prepare k3s kubeconfig to copy it locally
+      "sudo cp -v /etc/rancher/k3s/k3s.yaml /home/ec2-user/config",
+      "sudo chmod 666 /home/ec2-user/config",
+
       # install helm
       "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3",
       "sudo chmod 700 get_helm.sh",
