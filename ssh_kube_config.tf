@@ -21,7 +21,7 @@ resource "local_file" "ssh_kube_config" {
       timeout      = "1m"
     }
 
-    on_failure  = continue
+    on_failure = continue
 
     command     = "scp k3s_server:/home/ec2-user/config config"
     interpreter = ["bash", "-c"]
@@ -29,7 +29,7 @@ resource "local_file" "ssh_kube_config" {
 
   # update k3s config for kubectl
   provisioner "local-exec" {
-    on_failure  = continue
+    on_failure = continue
 
     command     = "sed -i s/127.0.0.1/${data.aws_instance.k3s_server.private_ip}/ config; sed -i '6i \\ \\ \\ \\ proxy-url: socks5://localhost:1080' config"
     interpreter = ["bash", "-c"]
@@ -37,7 +37,7 @@ resource "local_file" "ssh_kube_config" {
 
   # move k3s config to ~/.kube folder
   provisioner "local-exec" {
-    on_failure  = continue
+    on_failure = continue
 
     command     = "mv config ~/.kube/config; chmod 600 ~/.kube/config"
     interpreter = ["bash", "-c"]

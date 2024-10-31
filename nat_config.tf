@@ -35,7 +35,7 @@ resource "null_resource" "nat_instance" {
     user        = "ec2-user"
     host        = data.aws_eip.nat_instance.public_ip
     private_key = var.private_key
-    timeout      = "1m"
+    timeout     = "1m"
   }
 
   # setup NAT

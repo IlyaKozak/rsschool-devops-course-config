@@ -20,7 +20,7 @@ resource "null_resource" "k3s_agent" {
       host         = data.aws_instance.k3s_agent.private_ip
       bastion_host = data.aws_eip.nat_instance.public_ip
       private_key  = var.private_key
-      timeout      = "1m" 
+      timeout      = "1m"
     }
 
     inline = [
