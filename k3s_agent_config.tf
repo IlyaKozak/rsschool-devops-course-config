@@ -20,12 +20,12 @@ resource "null_resource" "k3s_agent" {
       host         = data.aws_instance.k3s_agent.private_ip
       bastion_host = data.aws_eip.nat_instance.public_ip
       private_key  = var.private_key
+      timeout      = "1m" 
     }
 
-    # setup JENKINS in k3s cluster
     inline = [
       # install k3s and connect to k3s cluster
-      "curl -sfL https://get.k3s.io | K3S_URL=https://${data.aws_instance.k3s_server.private_ip}:6443 K3S_TOKEN=${var.k3s_token} sudo sh -s -",
+      "curl -sfL https://get.k3s.io | sudo K3S_URL=https://${data.aws_instance.k3s_server.private_ip}:6443 K3S_TOKEN=${var.k3s_token} sh -s -",
     ]
   }
 }

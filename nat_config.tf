@@ -35,12 +35,13 @@ resource "null_resource" "nat_instance" {
     user        = "ec2-user"
     host        = data.aws_eip.nat_instance.public_ip
     private_key = var.private_key
+    timeout      = "1m"
   }
 
   # setup NAT
   provisioner "remote-exec" {
     inline = [
-      "sudo dnf install iptables-services -y",
+      "sudo dnf install iptables-services -qy",
       "sudo systemctl enable --now iptables",
       "echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.d/custom-ip-forwarding.conf",
       "sudo sysctl -p /etc/sysctl.d/custom-ip-forwarding.conf",
@@ -48,18 +49,14 @@ resource "null_resource" "nat_instance" {
       "sudo /sbin/iptables -F FORWARD",
       "sudo /sbin/iptables -F INPUT",
       "sudo service iptables save",
-    ]
-  }
 
-  # setup NGINX to proxy JENKINS from private subnet
-  provisioner "remote-exec" {
-    inline = [
+      # setup NGINX to proxy JENKINS from private subnet
       # install nginx
-      "sudo dnf install nginx -y",
+      "sudo dnf install nginx -qy",
       "sudo systemctl enable --now nginx",
 
       # install certbot for tls certificates
-      "sudo dnf install certbot python3-certbot-nginx -y",
+      "sudo dnf install certbot python3-certbot-nginx -qy",
       # enable automatic certificates renewals
       "sudo systemctl start certbot-renew.timer",
 

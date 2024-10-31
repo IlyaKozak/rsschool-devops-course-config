@@ -15,12 +15,13 @@ resource "null_resource" "k3s_server" {
       host         = data.aws_instance.k3s_server.private_ip
       bastion_host = data.aws_eip.nat_instance.public_ip
       private_key  = var.private_key
+      timeout      = "1m"
     }
 
     # setup JENKINS in k3s cluster
     inline = [
       # install k3s
-      "curl -sfL https://get.k3s.io | K3S_TOKEN=${var.k3s_token} sudo sh -s -",
+      "curl -sfL https://get.k3s.io | sudo K3S_TOKEN=${var.k3s_token} sh -s -",
       # prepare k3s kubeconfig to copy it locally
       "sudo cp -v /etc/rancher/k3s/k3s.yaml /home/ec2-user/config",
       "sudo chmod 666 /home/ec2-user/config",
