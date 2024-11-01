@@ -1,8 +1,6 @@
 name: 'k3s + jenkins'
 
 on:
-  pull_request:
-    branches: ['main']
   workflow_dispatch:
 
 permissions:
