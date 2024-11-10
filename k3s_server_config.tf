@@ -17,8 +17,7 @@ resource "null_resource" "k3s_server" {
       private_key  = var.private_key
       timeout      = "1m"
     }
-
-    # setup JENKINS in k3s cluster
+    # setup jenkins in k3s cluster with traefik ingresss
     inline = [
       # install k3s
       "curl -sfL https://get.k3s.io | sudo K3S_TOKEN=${var.k3s_token} sh -s -",
@@ -31,8 +30,32 @@ resource "null_resource" "k3s_server" {
       "sudo chmod 700 get_helm.sh",
       "sudo ./get_helm.sh",
 
+      # configure traefik nodeports
+      # https://docs.k3s.io/helm#customizing-packaged-components-with-helmchartconfig
+      "sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml > /dev/null <<EOF",
+      "apiVersion: helm.cattle.io/v1",
+      "kind: HelmChartConfig",
+      "metadata:",
+      "  name: traefik",
+      "  namespace: kube-system",
+      "spec:",
+      "  valuesContent: |-",
+      "    ports:",
+      "      web:",
+      "        nodePort: ${var.traefik_nodeport}",
+      "        forwardedHeaders:",
+      "          trustedIPs: [${data.aws_eip.nat_instance.public_ip}]",
+      "          insecure: true",
+      "        proxyProtocol:",
+      "          trustedIPs: [${data.aws_eip.nat_instance.public_ip}]",
+      "          insecure: true",
+      "EOF",
+
       # add jenkins repo
       "sudo helm repo add jenkins https://charts.jenkins.io",
+
+      # add bitnami repo
+      "sudo helm repo add bitnami https://charts.bitnami.com/bitnami",
 
       # add aws-ebs-csi-driver repo
       "sudo helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver",
@@ -91,10 +114,18 @@ resource "null_resource" "k3s_server" {
       "volumeBindingMode: WaitForFirstConsumer",
       "EOF",
 
-      # install jenkins to k8s with pv dynamically provisioned with default ebs storage class and 
-      # exposed with NodePort service on node port
+      # jenkins kubernetes plugin cluster access with RBAC
+      # https://github.com/helm/charts/issues/1092
+      "sudo kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --user=admin \\",
+      "--user=kubelet --group=system:serviceaccounts",
+
+      # install jenkins to k8s with pv statically provisioned ebs volume and expose it via traefik ingress
       "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm install jenkins jenkins/jenkins --namespace jenkins \\",
-      "--set persistence.existingClaim=${var.jenkins.pvc} --set controller.serviceType=NodePort --set controller.nodePort=${var.jenkins.nodeport}",
+      "--set controller.ingress.enabled=true \\",
+      "--set controller.ingress.hostName=jenkins.${var.domain} \\",
+      "--set controller.ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
+      "--set persistence.existingClaim=${var.jenkins.pvc} \\",
+      "--set rbac.readSecrets=true",
     ]
   }
 }
