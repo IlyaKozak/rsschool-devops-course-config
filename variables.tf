@@ -4,19 +4,8 @@ variable "aws_region" {
   default     = "eu-north-1"
 }
 
-variable "private_key" {
-  description = "Private SSH key for remote access"
-  type        = string
-  sensitive   = true
-}
-
-variable "private_key_path" {
-  description = "Private SSH path on local machine"
-  type        = string
-}
-
-variable "k3s_token" {
-  description = "k3s token"
+variable "domain" {
+  description = "domain"
   type        = string
 }
 
@@ -24,20 +13,44 @@ variable "jenkins" {
   description = "jenkins variables"
   type        = map(string)
   default = {
-    nodeport    = "30080",
-    volume_size = "8Gi",
+    volume_size = "4Gi",
     volume_type = "gp3",
     pv          = "jenkins-pv",
     pvc         = "jenkins-claim"
   }
 }
 
-variable "domain" {
-  description = "domain for jenkins"
+variable "k3s_token" {
+  description = "k3s token"
   type        = string
 }
 
-variable "is_local_setup" {
-  description = "if true prepare ssh and k3s configs on local machine for kubectl and helm"
-  type        = bool
+variable "private_key" {
+  description = "Private SSH key for remote access"
+  type        = string
+  sensitive   = true
+}
+
+variable "private_key_path" {
+  description = "Private SSH key path on local machine"
+  type        = string
+  default     = "~/.ssh/aws_jump_host.pem"
+}
+
+variable "ssl_cert" {
+  description = "ssl certificate for domain"
+  type        = string
+  sensitive   = true
+}
+
+variable "ssl_key" {
+  description = "ssl key for domain"
+  type        = string
+  sensitive   = true
+}
+
+variable "traefik_nodeport" {
+  description = "traefik nodeport for web"
+  type        = string
+  default     = "30080"
 }
