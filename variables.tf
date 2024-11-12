@@ -32,19 +32,19 @@ variable "private_key" {
 }
 
 variable "private_key_path" {
-  description = "Private SSH path on local machine"
+  description = "Private SSH key path on local machine"
   type        = string
   default     = "~/.ssh/aws_jump_host.pem"
 }
 
 variable "ssl_cert" {
-  description = "ssl certificate"
+  description = "ssl certificate for domain"
   type        = string
   sensitive   = true
 }
 
 variable "ssl_key" {
-  description = "ssl key"
+  description = "ssl key for domain"
   type        = string
   sensitive   = true
 }
