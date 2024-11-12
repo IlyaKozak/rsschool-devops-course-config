@@ -32,7 +32,7 @@ For more details please see PR: https://github.com/IlyaKozak/rsschool-devops-cou
 <hr />
 
 **Diagram:**  
-![Diagram](tasks-images/task4-diagram.png)
+![Diagram](tasks-images/task-4-diagram.png)
 
 ### Infractructure
 
