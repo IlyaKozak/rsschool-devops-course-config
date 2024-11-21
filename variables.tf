@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "eu-north-1"
 }
 
+variable "aws_az" {
+  description = "aws az"
+  type        = string
+  default     = "eu-north-1a"
+}
+
 variable "domain" {
   description = "domain"
   type        = string
@@ -13,7 +19,8 @@ variable "jenkins" {
   description = "jenkins variables"
   type        = map(string)
   default = {
-    volume_size = "4Gi",
+    namespace   = "jenkins",
+    volume_size = "8Gi",
     volume_type = "gp3",
     pv          = "jenkins-pv",
     pvc         = "jenkins-claim"
@@ -35,6 +42,18 @@ variable "private_key_path" {
   description = "Private SSH key path on local machine"
   type        = string
   default     = "~/.ssh/aws_jump_host.pem"
+}
+
+variable "sonarqube" {
+  description = "sonarqube variables"
+  type        = map(string)
+  default = {
+    namespace   = "sonarqube",
+    volume_size = "4Gi",
+    volume_type = "gp3",
+    pv          = "sonarqube-pv",
+    pvc         = "sonarqube-claim"
+  }
 }
 
 variable "ssl_cert" {
