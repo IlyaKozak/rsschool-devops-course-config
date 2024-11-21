@@ -195,6 +195,7 @@ resource "null_resource" "k3s_server" {
       "--set ingress.enabled=true \\",
       "--set ingress.hosts[0].name=sonarqube.${var.domain} \\",
       "--set ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
+      "--set postgresql.persistence.size=${var.sonarqube.volume_size} \\",
       "--set postgresql.image.tag=13.17.0-debian-12-r0 \\",
       "--set persistence.enabled=true \\",
       "--set persistence.existingClaim=${var.sonarqube.pvc}",
