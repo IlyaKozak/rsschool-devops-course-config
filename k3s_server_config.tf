@@ -60,8 +60,8 @@ resource "null_resource" "k3s_server" {
       # add aws-ebs-csi-driver repo
       "sudo helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver",
 
-      # add sonarqube repo
-      "sudo helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube",
+      # add prometheus-community repo
+      "sudo helm repo add prometheus-community https://prometheus-community.github.io/helm-charts",
 
       "sudo helm repo update",
 
@@ -140,11 +140,17 @@ resource "null_resource" "k3s_server" {
       "--set persistence.existingClaim=${var.jenkins.pvc} \\",
       "--set rbac.readSecrets=true",
 
+      # install prometheus node-exporter to k8s
+      "sudo -E helm upgrade --install -n node-exporter --create-namespace node-exporter prometheus-community/prometheus-node-exporter",
+
       # install prometheus to k8s and expose it via traefik ingress
       "sudo -E helm upgrade --install -n prometheus --create-namespace prometheus oci://registry-1.docker.io/bitnamicharts/prometheus \\",
       "--set server.ingress.enabled=true \\",
       "--set server.ingress.hostname=prometheus.${var.domain} \\",
       "--set server.ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
+      # node-exporter scrape target
+      "--set server.extraScrapeConfigs[0].job_name=node-exporter \\",
+      "--set server.extraScrapeConfigs[0].static_configs[0].targets[0]=node-exporter-prometheus-node-exporter.node-exporter.svc.cluster.local:9100",
     ]
   }
 }
