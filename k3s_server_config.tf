@@ -142,15 +142,20 @@ resource "null_resource" "k3s_server" {
 
       # install prometheus node-exporter to k8s
       "sudo -E helm upgrade --install -n node-exporter --create-namespace node-exporter prometheus-community/prometheus-node-exporter",
+      # install prometheus kube-state-metrics to k8s
+      "sudo -E helm upgrade --install -n kube-state-metrics --create-namespace kube-state-metrics prometheus-community/kube-state-metrics",
 
-      # install prometheus to k8s and expose it via traefik ingress
+      # install prometheus to k8s
       "sudo -E helm upgrade --install -n prometheus --create-namespace prometheus oci://registry-1.docker.io/bitnamicharts/prometheus \\",
-      "--set server.ingress.enabled=true \\",
-      "--set server.ingress.hostname=prometheus.${var.domain} \\",
-      "--set server.ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
-      # node-exporter scrape target
+      # with node-exporter dynamic service discovery
       "--set server.extraScrapeConfigs[0].job_name=node-exporter \\",
-      "--set server.extraScrapeConfigs[0].static_configs[0].targets[0]=node-exporter-prometheus-node-exporter.node-exporter.svc.cluster.local:9100",
+      "--set server.extraScrapeConfigs[0].kubernetes_sd_configs[0].role=endpoints \\",
+      "--set server.extraScrapeConfigs[0].relabel_configs[0].source_labels[0]=__meta_kubernetes_service_name \\",
+      "--set server.extraScrapeConfigs[0].relabel_configs[0].regex=node-exporter-prometheus-node-exporter \\",
+      "--set server.extraScrapeConfigs[0].relabel_configs[0].action=keep \\",
+      # with kube-state-metrics static scrape target
+      "--set server.extraScrapeConfigs[1].job_name=kube-state-metrics \\",
+      "--set server.extraScrapeConfigs[1].static_configs[0].targets[0]=kube-state-metrics.kube-state-metrics.svc.cluster.local:8080",
     ]
   }
 }
