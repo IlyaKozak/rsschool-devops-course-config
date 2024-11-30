@@ -5,13 +5,6 @@ data "aws_ebs_volume" "jenkins_volume" {
   }
 }
 
-data "aws_ebs_volume" "sonarqube_volume" {
-  filter {
-    name   = "tag:Name"
-    values = ["sonarqube"]
-  }
-}
-
 resource "null_resource" "k3s_server" {
   depends_on = [null_resource.nat_instance]
 
@@ -76,8 +69,9 @@ resource "null_resource" "k3s_server" {
       "sleep 10",
       "done",
 
+      "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml",
       # install aws-ebs-csi-driver
-      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm install aws-ebs-csi-driver --namespace kube-system aws-ebs-csi-driver/aws-ebs-csi-driver",
+      "sudo -E helm install aws-ebs-csi-driver --namespace kube-system aws-ebs-csi-driver/aws-ebs-csi-driver",
 
       # create jenkins persistent volume
       "cat <<EOF | sudo kubectl apply -f -",
@@ -103,35 +97,8 @@ resource "null_resource" "k3s_server" {
       "                - ${var.aws_az}",
       "EOF",
 
-      # create sonarqube persistent volume
-      "cat <<EOF | sudo kubectl apply -f -",
-      "apiVersion: v1",
-      "kind: PersistentVolume",
-      "metadata:",
-      "  name: ${var.sonarqube.pv}",
-      "spec:",
-      "  accessModes:",
-      "  - ReadWriteOnce",
-      "  capacity:",
-      "    storage: ${var.sonarqube.volume_size}",
-      "  csi:",
-      "    driver: ebs.csi.aws.com",
-      "    volumeHandle: ${data.aws_ebs_volume.sonarqube_volume.id}",
-      "  nodeAffinity:",
-      "    required:",
-      "      nodeSelectorTerms:",
-      "        - matchExpressions:",
-      "            - key: topology.kubernetes.io/zone",
-      "              operator: In",
-      "              values:",
-      "                - ${var.aws_az}",
-      "EOF",
-
       # create jenkins namespace
       "sudo kubectl create namespace ${var.jenkins.namespace}",
-
-      # create sonarqube namespace
-      "sudo kubectl create namespace ${var.sonarqube.namespace}",
 
       # create jenkins persistent volume claim
       "cat <<EOF | sudo kubectl apply -f -",
@@ -150,23 +117,6 @@ resource "null_resource" "k3s_server" {
       "      storage: ${var.jenkins.volume_size}",
       "EOF",
 
-      # create sonarqube persistent volume claim
-      "cat <<EOF | sudo kubectl apply -f -",
-      "apiVersion: v1",
-      "kind: PersistentVolumeClaim",
-      "metadata:",
-      "  name: ${var.sonarqube.pvc}",
-      "  namespace: ${var.sonarqube.namespace}",
-      "spec:",
-      "  storageClassName: ''",
-      "  volumeName: ${var.sonarqube.pv}",
-      "  accessModes:",
-      "    - ReadWriteOnce",
-      "  resources:",
-      "    requests:",
-      "      storage: ${var.sonarqube.volume_size}",
-      "EOF",
-
       # create ebs storage class for dynamic persistent volumes provisioning
       "cat <<EOF | sudo kubectl apply -f -",
       "apiVersion: storage.k8s.io/v1",
@@ -183,22 +133,18 @@ resource "null_resource" "k3s_server" {
       "--user=kubelet --group=system:serviceaccounts",
 
       # install jenkins to k8s with pv statically provisioned ebs volume and expose it via traefik ingress
-      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm upgrade --install -n jenkins jenkins jenkins/jenkins \\",
+      "sudo -E helm upgrade --install -n jenkins jenkins jenkins/jenkins \\",
       "--set controller.ingress.enabled=true \\",
       "--set controller.ingress.hostName=jenkins.${var.domain} \\",
       "--set controller.ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
       "--set persistence.existingClaim=${var.jenkins.pvc} \\",
       "--set rbac.readSecrets=true",
 
-      # install sonarqube to k8s with pv statically provisioned ebs volume and expose it via traefik ingress
-      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml helm upgrade --install -n sonarqube sonarqube sonarqube/sonarqube \\",
-      "--set ingress.enabled=true \\",
-      "--set ingress.hosts[0].name=sonarqube.${var.domain} \\",
-      "--set ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
-      "--set postgresql.persistence.size=${var.sonarqube.volume_size} \\",
-      "--set postgresql.image.tag=13.17.0-debian-12-r0 \\",
-      "--set persistence.enabled=true \\",
-      "--set persistence.existingClaim=${var.sonarqube.pvc}",
+      # install prometheus to k8s and expose it via traefik ingress
+      "sudo -E helm upgrade --install -n prometheus --create-namespace prometheus oci://registry-1.docker.io/bitnamicharts/prometheus \\",
+      "--set server.ingress.enabled=true \\",
+      "--set server.ingress.hostname=prometheus.${var.domain} \\",
+      "--set server.ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
     ]
   }
 }
