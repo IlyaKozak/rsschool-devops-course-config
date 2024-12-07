@@ -156,6 +156,29 @@ resource "null_resource" "k3s_server" {
       # with kube-state-metrics static scrape target
       "--set server.extraScrapeConfigs[1].job_name=kube-state-metrics \\",
       "--set server.extraScrapeConfigs[1].static_configs[0].targets[0]=kube-state-metrics.kube-state-metrics.svc.cluster.local:8080",
+
+      # grafana namespace
+      "sudo kubectl create namespace grafana",
+      
+      # grafana secret
+      "sudo kubectl create secret generic -n grafana grafana-admin-secret \\",
+      "--from-literal=admin=admin \\",
+      "--from-literal=password=${var.grafana_password}",
+
+      # install grafana to k8s
+      "sudo -E helm upgrade --install -n grafana --create-namespace grafana oci://registry-1.docker.io/bitnamicharts/grafana \\",
+      "--set ingress.enabled=true \\",
+      "--set ingress.hostname=grafana.${var.domain} \\",
+      "--set ingress.annotations.\"traefik\\.ingress\\.kubernetes\\.io/router\\.entrypoints\"=web \\",
+      # prometheus data source
+      "--set datasources.secretDefinition.apiVersion=1 \\",
+      "--set datasources.secretDefinition.datasources[0].name=Prometheus \\",
+      "--set datasources.secretDefinition.datasources[0].type=prometheus \\",
+      "--set datasources.secretDefinition.datasources[0].url=http://prometheus-server.prometheus.svc.cluster.local \\",
+      "--set datasources.secretDefinition.datasources[0].access=proxy \\",
+      "--set datasources.secretDefinition.datasources[0].isDefault=true \\",
+      # grafana secret
+      "--set admin.existingSecret=grafana-admin-secret",
     ]
   }
 }

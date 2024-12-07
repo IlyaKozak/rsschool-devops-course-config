@@ -15,6 +15,11 @@ variable "domain" {
   type        = string
 }
 
+variable "grafana_password" {
+  description = "grafana password"
+  type        = string
+}
+
 variable "jenkins" {
   description = "jenkins variables"
   type        = map(string)
