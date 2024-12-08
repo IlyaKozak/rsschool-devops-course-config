@@ -41,3 +41,4 @@ jobs:
           TF_VAR_private_key_path: ${{ vars.TF_VAR_PRIVATE_KEY_PATH }}
           TF_VAR_ssl_cert: ${{ secrets.TF_VAR_SSL_CERT }}
           TF_VAR_ssl_key: ${{ secrets.TF_VAR_SSL_KEY }}
+          TF_VAR_grafana_password: ${{ secrets.TF_VAR_GRAFANA_PASSWORD }}
