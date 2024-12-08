@@ -1,4 +1,4 @@
-name: 'k3s + jenkins + prometheus'
+name: 'k3s + jenkins + prometheus + grafana'
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   terraform:
-    name: 'k3s + jenkins + prometheus'
+    name: 'k3s + jenkins + prometheus + grafana'
     runs-on: ubuntu-latest
 
     steps:
