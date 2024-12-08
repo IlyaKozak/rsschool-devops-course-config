@@ -5,6 +5,10 @@ data "aws_ebs_volume" "jenkins_volume" {
   }
 }
 
+locals {
+  grafana_dashboard_json = file("grafana-dashboard-model.json")
+}
+
 resource "null_resource" "k3s_server" {
   depends_on = [null_resource.nat_instance]
 
@@ -159,11 +163,16 @@ resource "null_resource" "k3s_server" {
 
       # grafana namespace
       "sudo kubectl create namespace grafana",
-      
+
       # grafana secret
       "sudo kubectl create secret generic -n grafana grafana-admin-secret \\",
       "--from-literal=admin=admin \\",
       "--from-literal=password=${var.grafana_password}",
+
+      # download grafana dashboard
+      "sudo curl -o /tmp/grafana-dashboard-model.json ${var.grafana_dashboard_url}",
+      # create configmap for grafana dashboard
+      "sudo kubectl create configmap grafana-dashboard-model --from-file=/tmp/grafana-dashboard-model.json -n grafana",
 
       # install grafana to k8s
       "sudo -E helm upgrade --install -n grafana --create-namespace grafana oci://registry-1.docker.io/bitnamicharts/grafana \\",
@@ -178,7 +187,11 @@ resource "null_resource" "k3s_server" {
       "--set datasources.secretDefinition.datasources[0].access=proxy \\",
       "--set datasources.secretDefinition.datasources[0].isDefault=true \\",
       # grafana secret
-      "--set admin.existingSecret=grafana-admin-secret",
+      "--set admin.existingSecret=grafana-admin-secret \\",
+      # grafana dashboard setup
+      "--set dashboardsProvider.enabled=true \\",
+      "--set dashboardsConfigMaps[0].configMapName=grafana-dashboard-model \\",
+      "--set dashboardsConfigMaps[0].fileName=grafana-dashboard-model.json",
     ]
   }
 }
