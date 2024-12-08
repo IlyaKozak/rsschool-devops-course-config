@@ -1,4 +1,4 @@
-name: 'k3s + jenkins + prometheus'
+name: 'k3s + jenkins + prometheus + grafana'
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   terraform:
-    name: 'k3s + jenkins + prometheus'
+    name: 'k3s + jenkins + prometheus + grafana'
     runs-on: ubuntu-latest
 
     steps:
@@ -41,3 +41,4 @@ jobs:
           TF_VAR_private_key_path: ${{ vars.TF_VAR_PRIVATE_KEY_PATH }}
           TF_VAR_ssl_cert: ${{ secrets.TF_VAR_SSL_CERT }}
           TF_VAR_ssl_key: ${{ secrets.TF_VAR_SSL_KEY }}
+          TF_VAR_grafana_password: ${{ secrets.TF_VAR_GRAFANA_PASSWORD }}

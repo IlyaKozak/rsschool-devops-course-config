@@ -15,6 +15,17 @@ variable "domain" {
   type        = string
 }
 
+variable "grafana_dashboard_url" {
+  description = "grafana dashboard url"
+  type        = string
+  default     = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-8-grafana/grafana-dashboard-model.json"
+}
+
+variable "grafana_password" {
+  description = "grafana password"
+  type        = string
+}
+
 variable "jenkins" {
   description = "jenkins variables"
   type        = map(string)
