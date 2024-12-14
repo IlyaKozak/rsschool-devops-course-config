@@ -18,10 +18,9 @@ variable "domain" {
 variable "grafana" {
   description = "grafana setup"
   type        = map(string)
-  sensitive   = true
   default = {
     dashboard_url                  = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-8-grafana/grafana-dashboard-model.json"
-    alert_rules_contact_points_url = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-9-grafana/grafana-alert-rules-contact-points.yaml"
+    alert_rules_contact_points_url = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-9-alertmanager/grafana-alert-rules-contact-points.yaml"
   }
 }
 
@@ -60,11 +59,14 @@ variable "private_key_path" {
 }
 
 variable "smtp" {
-  description = "smtp setup"
+  description = "smtp setup (host, user, password, from, to)"
   type        = map(string)
-  sensitive   = true
   default = {
-    host = "email-smtp.eu-north-1.amazonaws.com:587"
+    host     = "",
+    user     = "",
+    password = "",
+    from     = "",
+    to       = "",
   }
 }
 
