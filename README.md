@@ -13,8 +13,21 @@
 ├── k3s_agent_config.tf     <- k3s agent config
 ├── backend.tf              <- backend configuration
 ├── variables.tf            <- input variables
+├── grafana-dashboard-model <- grafana dashboard
 └── ...
 ```
+
+<details>
+<summary><strong>Task 8 - Grafana Installation and Dashboard Creation</strong></summary>
+
+- [Grafana is installed using the Helm chart by Bitnami](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-8-grafana/k3s_server_config.tf#L177-L194)
+- [Grafana deployment in Kubernetes is automated with GitHub Actions CI/CD workflow](https://github.com/IlyaKozak/rsschool-devops-course-config/actions/runs/12221605611/job/34090864262#step:7:467)
+- [New data source pointing to the existing Prometheus installation is added](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-8-grafana/k3s_server_config.tf#L182-L188)
+- [Grafana dashboard is created with with basic metrics visualized, such as CPU and memory utilization, storage usage](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-8-grafana/grafana-dashboard-model.json)
+
+For more details please see PR: https://github.com/IlyaKozak/rsschool-devops-course-config/pull/3
+
+</details>
 
 <details>
 <summary><strong>Task 7 - Prometheus Deployment on K8s</strong></summary>
@@ -53,4 +66,4 @@ Infrastructure configuration provided in this repo (IaC) **https://github.com/Il
 
 **Usage:**
 
-Add secrets `AWS_ROLE_TO_ASSUME`, `TF_VAR_K3S_TOKEN`, `TF_VAR_PRIVATE_KEY`, `TF_VAR_SSL_CERT`, `TF_VAR_SSL_KEY` and environment variable `AWS_REGION`, `TF_VAR_DOMAIN`, `TF_VAR_IS_LOCAL_SETUP`=`false`, `TF_VAR_PRIVATE_KEY_PATH` in GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s and jenkins
+Add secrets `AWS_ROLE_TO_ASSUME`, `TF_VAR_K3S_TOKEN`, `TF_VAR_PRIVATE_KEY`, `TF_VAR_SSL_CERT`, `TF_VAR_SSL_KEY`, `TF_VAR_GRAFANA_PASSWORD` and environment variable `AWS_REGION`, `TF_VAR_DOMAIN`, `TF_VAR_IS_LOCAL_SETUP`=`false`, `TF_VAR_PRIVATE_KEY_PATH` in GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s/jenkins/prometheus/grafana
