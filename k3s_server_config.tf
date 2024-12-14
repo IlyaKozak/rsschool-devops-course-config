@@ -170,9 +170,15 @@ resource "null_resource" "k3s_server" {
       "--from-literal=password=${var.grafana_password}",
 
       # download grafana dashboard
-      "sudo curl -o /tmp/grafana-dashboard-model.json ${var.grafana_dashboard_url}",
+      "sudo curl -o /tmp/grafana-dashboard-model.json ${var.grafana.dashboard_url}",
       # create configmap for grafana dashboard
       "sudo kubectl create configmap grafana-dashboard-model --from-file=/tmp/grafana-dashboard-model.json -n grafana",
+
+      # download grafana alert rules and contact points config
+      "sudo curl -o /tmp/grafana-alert-rules.yaml ${var.grafana.alert_rules_contact_points_url}",
+      "sudo sed -i 's/xxx@xxx.xxx/${var.smtp.to}/g' /tmp/grafana-alert-rules.yaml",
+      # create configmap for grafana alert rules and contact points
+      "sudo kubectl create configmap grafana-alert-rules --from-file=/tmp/grafana-alert-rules.yaml -n grafana",
 
       # install grafana to k8s
       "sudo -E helm upgrade --install -n grafana --create-namespace grafana oci://registry-1.docker.io/bitnamicharts/grafana \\",
@@ -191,7 +197,16 @@ resource "null_resource" "k3s_server" {
       # grafana dashboard setup
       "--set dashboardsProvider.enabled=true \\",
       "--set dashboardsConfigMaps[0].configMapName=grafana-dashboard-model \\",
-      "--set dashboardsConfigMaps[0].fileName=grafana-dashboard-model.json",
+      "--set dashboardsConfigMaps[0].fileName=grafana-dashboard-model.json \\",
+      # grafana smtp
+      "--set smtp.enabled=true \\",
+      "--set smtp.host=${var.smtp.host} \\",
+      "--set smtp.user=${var.smtp.user} \\",
+      "--set smtp.password=${var.smtp.password} \\",
+      "--set smtp.fromAddress=${var.smtp.from} \\",
+      "--set smtp.fromName=\"Grafana Alerts\" \\",
+      "--set smtp.skipVerify=true \\",
+      "--set alerting.configMapName=grafana-contact-points-alert-rules",
     ]
   }
 }

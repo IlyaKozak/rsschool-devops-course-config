@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-contact-points-alert-rules
+  namespace: grafana
+data:
+  alert-rules.yaml: |
+    contactPoints:
+    - name: email-alert
+      receivers:
+        - uid: ae6w66n5spt6pe
+          type: email
+          settings:
+            addresses: xxx@xxx.xxx
+            singleEmail: false
+          disableResolveMessage: false
+    policies:
+    - receiver: email-alert
+      group_by:
+        - grafana_folder
+        - alertname
+    groups:
+    - name: task9-custom-alerts
+      folder: alerts
+      interval: 1m
+      rules:
+        - uid: low_ram_capacity
+          title: LowRAMCapacity
+          condition: LowRAMThresholdMet
+          data:
+            - refId: AvailableRAMPercentage
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: PBFA97CFB590B2093
+              model:
+                disableTextWrap: false
+                editorMode: code
+                expr: '(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 '
+                fullMetaSearch: false
+                includeNullMetadata: true
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: AvailableRAMPercentage
+                useBackend: false
+            - refId: LowRAMThresholdMet
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 20
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - AvailableRAMPercentage
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: AvailableRAMPercentage
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: LowRAMThresholdMet
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: Available RAM is below 20% for {{ $labels.instance }}
+            summary: Low RAM capacity detected on {{ $labels.instance }}
+          labels:
+            severity: critical
+            category: performance
+          isPaused: false
+          notification_settings:
+            receiver: email-alert
+        - uid: cpu_high_utilization
+          title: HighCPUUtilization
+          condition: CPUUsageThresholdMet
+          data:
+            - refId: CPUUsagePercentage
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: PBFA97CFB590B2093
+              model:
+                disableTextWrap: false
+                editorMode: code
+                expr: '100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)'
+                fullMetaSearch: false
+                includeNullMetadata: true
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: CPUUsagePercentage
+                useBackend: false
+            - refId: CPUUsageThresholdMet
+              datasourceUid: __expr__
+              model:
+                conditions:
+                  - evaluator:
+                      params:
+                        - 80
+                      type: gt
+                    operator:
+                      type: and
+                    query:
+                      params:
+                        - CPUUsagePercentage
+                    reducer:
+                      params: []
+                      type: last
+                    type: query
+                datasource:
+                  type: __expr__
+                  uid: __expr__
+                expression: CPUUsagePercentage
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: CPUUsageThresholdMet
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: CPU usage is above 80% for {{ $labels.instance }}
+            summary: High CPU usage detected on {{ $labels.instance }}
+          labels:
+            severity: critical
+            category: performance
+          isPaused: false
+          notification_settings:
+            receiver: email-alert
