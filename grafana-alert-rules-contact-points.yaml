@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-contact-points-alert-rules
+  name: grafana-alert-rules-contact-points
   namespace: grafana
 data:
   alert-rules.yaml: |

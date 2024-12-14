@@ -178,7 +178,7 @@ resource "null_resource" "k3s_server" {
       "sudo curl -o /tmp/alert_rules_contact_points.yaml ${var.grafana.alert_rules_contact_points_url}",
       "sudo sed -i 's/xxx@xxx.xxx/${var.smtp.to}/g' /tmp/alert_rules_contact_points.yaml",
       # create configmap for grafana alert rules and contact points
-      "sudo kubectl create configmap alert_rules_contact_points --from-file=/tmp/alert_rules_contact_points.yaml -n grafana",
+      "sudo kubectl apply -f /tmp/alert_rules_contact_points.yaml",
 
       # install grafana to k8s
       "sudo -E helm upgrade --install -n grafana --create-namespace grafana oci://registry-1.docker.io/bitnamicharts/grafana \\",
