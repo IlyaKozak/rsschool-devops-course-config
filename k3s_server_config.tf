@@ -206,7 +206,7 @@ resource "null_resource" "k3s_server" {
       "--set smtp.fromAddress=${var.smtp.from} \\",
       "--set smtp.fromName=\"Grafana Alerts\" \\",
       "--set smtp.skipVerify=true \\",
-      "--set alerting.configMapName=grafana-contact-points-alert-rules",
+      "--set alerting.configMapName=grafana-alert-rules-contact-points",
     ]
   }
 }
