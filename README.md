@@ -18,7 +18,7 @@
 └── ...
 ```
 
-<details>
+<details open>
 <summary><strong>Task 9 - Alertmanager Configuration and Verification</strong></summary>
 
 - SMTP is configured for Grafana to send emails via Amazon SES (Simple Email Service):
