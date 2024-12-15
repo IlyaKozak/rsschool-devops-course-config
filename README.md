@@ -5,17 +5,41 @@
 ```
 ├── .github
 │   └── workflows
-│       └── k3s.yml         <- github actions workflow
+│       └── k3s.yml                         <- github actions workflow
 ├── .gitignore
 ├── main.tf
-├── nat_config.tf           <- NAT/Nginx config
-├── k3s_server_config.tf    <- k3s server config
-├── k3s_agent_config.tf     <- k3s agent config
-├── backend.tf              <- backend configuration
-├── variables.tf            <- input variables
-├── grafana-dashboard-model <- grafana dashboard
+├── nat_config.tf                           <- NAT/Nginx config
+├── k3s_server_config.tf                    <- k3s server config
+├── k3s_agent_config.tf                     <- k3s agent config
+├── backend.tf                              <- backend configuration
+├── variables.tf                            <- input variables
+├── grafana-alert-rules-contact-points.yaml <- grafana contact points / alert rules
+├── grafana-dashboard-model.json            <- grafana dashboard
 └── ...
 ```
+
+<details>
+<summary><strong>Task 9 - Alertmanager Configuration and Verification</strong></summary>
+
+- SMTP is configured for Grafana to send emails via Amazon SES (Simple Email Service):
+  - In AWS SES SMTP credentials are created: `user` and `password`
+  - In AWS SES `from address` and `to address` `identities` are verified
+  - [`host:port`, `user`, `password`, `from address`](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/k3s_server_config.tf#L203-L206), [`to address`](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/grafana-alert-rules-contact-points.yaml#L14) are provided during Grafana Helm installation
+- `Contact Points` are configured:
+  - [1 - ConfigMap yaml file is provided](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/grafana-alert-rules-contact-points.yaml#L8-L16)
+  - [2 - ConfigMap is created](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/k3s_server_config.tf#L177-L181)
+  - [3 - Grafana is installed with provided ConfigMap as `alerting.configMapName`](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/k3s_server_config.tf#L209)
+- `Alert Rules` are configured for:
+  - [High CPU utilization](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/grafana-alert-rules-contact-points.yaml#L86-L144) on any node of the cluster
+  - [Lack of RAM capacity](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/grafana-alert-rules-contact-points.yaml#L27-L85) on any node of the cluster
+  - [Emails are configured](https://github.com/IlyaKozak/rsschool-devops-course-config/blob/task-9-alertmanager/grafana-alert-rules-contact-points.yaml#L143-L144) for `firing` events
+- `Alerts` are verified with simulated CPU and memory `stress` on a Kubernetes node using `stress-ng`
+  - `stress-ng` is installed: `sudo dnf install stress-ng -y`
+  - `stress` is done: `stress-ng --vm 2 --vm-bytes 1300M --timeout 300s`
+
+For more details please see PR: https://github.com/IlyaKozak/rsschool-devops-course-config/pull/4
+
+</details>
 
 <details>
 <summary><strong>Task 8 - Grafana Installation and Dashboard Creation</strong></summary>
@@ -66,4 +90,5 @@ Infrastructure configuration provided in this repo (IaC) **https://github.com/Il
 
 **Usage:**
 
-Add secrets `AWS_ROLE_TO_ASSUME`, `TF_VAR_K3S_TOKEN`, `TF_VAR_PRIVATE_KEY`, `TF_VAR_SSL_CERT`, `TF_VAR_SSL_KEY`, `TF_VAR_GRAFANA_PASSWORD` and environment variable `AWS_REGION`, `TF_VAR_DOMAIN`, `TF_VAR_IS_LOCAL_SETUP`=`false`, `TF_VAR_PRIVATE_KEY_PATH` in GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s/jenkins/prometheus/grafana
+Add secrets `AWS_ROLE_TO_ASSUME`, `TF_VAR_K3S_TOKEN`, `TF_VAR_PRIVATE_KEY`, `TF_VAR_SSL_CERT`, `TF_VAR_SSL_KEY`, `TF_VAR_GRAFANA_PASSWORD`, `TF_VAR_SMTP`=`{"host":"email-smtp.<region>.amazonaws.com:587", "user":"xxx", "password":"xxx", "from":"xxx@xxx.xxx", "to":"xxx@xxx.xxx"}`
+and environment variable `AWS_REGION`, `TF_VAR_DOMAIN`, `TF_VAR_IS_LOCAL_SETUP`=`false`, `TF_VAR_PRIVATE_KEY_PATH` in GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s/jenkins/prometheus/grafana/alertmanager
