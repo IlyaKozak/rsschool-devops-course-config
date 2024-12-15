@@ -90,5 +90,18 @@ Infrastructure configuration provided in this repo (IaC) **https://github.com/Il
 
 **Usage:**
 
-Add secrets `AWS_ROLE_TO_ASSUME`, `TF_VAR_K3S_TOKEN`, `TF_VAR_PRIVATE_KEY`, `TF_VAR_SSL_CERT`, `TF_VAR_SSL_KEY`, `TF_VAR_GRAFANA_PASSWORD`, `TF_VAR_SMTP`=`{"host":"email-smtp.<region>.amazonaws.com:587", "user":"xxx", "password":"xxx", "from":"xxx@xxx.xxx", "to":"xxx@xxx.xxx"}`
-and environment variable `AWS_REGION`, `TF_VAR_DOMAIN`, `TF_VAR_IS_LOCAL_SETUP`=`false`, `TF_VAR_PRIVATE_KEY_PATH` in GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s/jenkins/prometheus/grafana/alertmanager
+In GitHub repo for GitHub Actions workflow to run with `workflow_dispatch` ➤ automatically `terraform apply` configuration for k3s/jenkins/prometheus/grafana/alertmanager:
+
+- Add secrets:
+  - `AWS_ROLE_TO_ASSUME`
+  - `TF_VAR_K3S_TOKEN`
+  - `TF_VAR_PRIVATE_KEY`
+  - `TF_VAR_SSL_CERT`
+  - `TF_VAR_SSL_KEY`
+  - `TF_VAR_GRAFANA_PASSWORD`
+  - `TF_VAR_SMTP`=`{"host":"email-smtp.<region>.amazonaws.com:587", "user":"xxx", "password":"xxx", "from":"xxx@xxx.xxx", "to":"xxx@xxx.xxx"}`
+- Add Environment Variables:
+  - `AWS_REGION`
+  - `TF_VAR_DOMAIN`
+  - `TF_VAR_IS_LOCAL_SETUP`=`false`
+  - `TF_VAR_PRIVATE_KEY_PATH`
