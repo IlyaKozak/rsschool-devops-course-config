@@ -15,10 +15,13 @@ variable "domain" {
   type        = string
 }
 
-variable "grafana_dashboard_url" {
-  description = "grafana dashboard url"
-  type        = string
-  default     = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-8-grafana/grafana-dashboard-model.json"
+variable "grafana" {
+  description = "grafana setup"
+  type        = map(string)
+  default = {
+    dashboard_url                  = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-8-grafana/grafana-dashboard-model.json"
+    alert_rules_contact_points_url = "https://raw.githubusercontent.com/IlyaKozak/rsschool-devops-course-config/refs/heads/task-9-alertmanager/grafana-alert-rules-contact-points.yaml"
+  }
 }
 
 variable "grafana_password" {
@@ -53,6 +56,18 @@ variable "private_key_path" {
   description = "Private SSH key path on local machine"
   type        = string
   default     = "~/.ssh/aws_jump_host.pem"
+}
+
+variable "smtp" {
+  description = "smtp setup (host, user, password, from, to)"
+  type        = map(string)
+  default = {
+    host     = "",
+    user     = "",
+    password = "",
+    from     = "",
+    to       = "",
+  }
 }
 
 variable "sonarqube" {
